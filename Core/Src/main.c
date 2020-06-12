@@ -26,7 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "usbd_hid_composite_if.h"
-
+#include "keyboard.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -80,69 +80,11 @@ PUTCHAR_PROTOTYPE {
 	return ch;
 }
 
-typedef struct {
-  uint8_t modifiers;
-  uint8_t reserved;
-  uint8_t keys[6];
-} KeyReport;
-
-static void _sendReport(KeyReport *keys)
-{
-  uint8_t buf[8] = {keys->modifiers, keys->reserved, keys->keys[0], keys->keys[1],
-                    keys->keys[2], keys->keys[3], keys->keys[4], keys->keys[5]
-                   };
-
-  HID_Composite_keyboard_sendReport(buf, 8);
+void delay_us(int x){
+	x *= 72;
+	x /= 10;
+	while(x--);
 }
-
-static KeyReport _keyReport = {0};
-
-static size_t _keyPress(uint8_t k)
-{
-  uint8_t i;
-  if (_keyReport.keys[0] != k && _keyReport.keys[1] != k &&
-      _keyReport.keys[2] != k && _keyReport.keys[3] != k &&
-      _keyReport.keys[4] != k && _keyReport.keys[5] != k) {
-
-    for (i = 0; i < 6; i++) {
-      if (_keyReport.keys[i] == 0x00) {
-        _keyReport.keys[i] = k;
-        break;
-      }
-    }
-    if (i == 6) {
-      return 0;
-    }
-  }
-  _sendReport(&_keyReport);
-  return 1;
-}
-
-static size_t _keyRelease(uint8_t k)
-{
-  uint8_t i;
-  for (i = 0; i < 6; i++) {
-    if (0 != k && _keyReport.keys[i] == k) {
-      _keyReport.keys[i] = 0x00;
-    }
-  }
-
-  _sendReport(&_keyReport);
-  return 1;
-}
-
-static void _keyReleaseAll(void)
-{
-  _keyReport.keys[0] = 0;
-  _keyReport.keys[1] = 0;
-  _keyReport.keys[2] = 0;
-  _keyReport.keys[3] = 0;
-  _keyReport.keys[4] = 0;
-  _keyReport.keys[5] = 0;
-  _keyReport.modifiers = 0;
-  _sendReport(&_keyReport);
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -182,6 +124,10 @@ int main(void)
 
   HID_Composite_Init(HID_KEYBOARD);
   puts("Init done. \r");
+  int x = HAL_GetTick();
+  delay_us(10000);
+  x = HAL_GetTick()-x;
+  printf("x=%d\r\n",x);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -191,17 +137,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		printf("HeartBeat %d\r\n", i++);
-		HAL_Delay(1000);
-		if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)==0){
-			puts("key pressed\r");
-			_keyReport.modifiers = KEY_MOD_LSHIFT;
-			_keyReport.keys[0]=KEY_LEFTSHIFT;
-			_keyReport.keys[1]=KEY_A;
-			_sendReport(&_keyReport);
-			HAL_Delay(100);
-			_keyReleaseAll();
-		}
+		if((i++%100)==0)printf("HeartBeat %d\r\n", i/100);
+		keyboard_scan();
+		HAL_Delay(10);
 	}
   /* USER CODE END 3 */
 }
