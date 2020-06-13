@@ -36,10 +36,13 @@ typedef struct
 static void
 _sendReport (KeyReport *keys)
 {
-  uint8_t buf[8] =
-    { keys->modifiers, keys->reserved, keys->keys[0], keys->keys[1], keys->keys[2], keys->keys[3], keys->keys[4],
-	keys->keys[5] };
+  uint8_t buf[8] = {
+	keys->modifiers, keys->reserved,
+	keys->keys[0], keys->keys[1], keys->keys[2], keys->keys[3], keys->keys[4],keys->keys[5]};
 
+  printf("Report %02x%02x%02x%02x%02x%02x%02x%02x\r\n",
+	 keys->modifiers, keys->reserved,
+	 keys->keys[0], keys->keys[1], keys->keys[2], keys->keys[3], keys->keys[4],keys->keys[5]);
   HID_Composite_keyboard_sendReport (buf, 8);
 }
 
@@ -49,6 +52,8 @@ static KeyReport _keyReport =
 static size_t
 _keyPress (uint8_t k)
 {
+  printf("keyPress(0x%02x)\r\n",k);
+  if(!k)return 0;
   if(k>=KEY_LEFTCTRL && k <= KEY_RIGHTMETA){
       _keyReport.modifiers |= 1<<(k-KEY_LEFTCTRL);
   }
@@ -77,6 +82,8 @@ _keyPress (uint8_t k)
 static size_t
 _keyRelease (uint8_t k)
 {
+  printf("keyRelease(0x%02x)\r\n",k);
+  if(!k)return 0;
   if(k>=KEY_LEFTCTRL && k <= KEY_RIGHTMETA){
       _keyReport.modifiers &= ~(1<<(k-KEY_LEFTCTRL));
   }
@@ -150,19 +157,23 @@ keyboard_scan ()
       uint8_t o = old_status[i];
       if (o != r)
 	{
-	  printf ("%d=", i);
-	  printBin (r);
+//	  printf ("%d=", i);
+//	  printBin (r);
+	  uint8_t x = o^r;
 	  for (int k = 0; k < 8; k++)
 	    {
-	      uint8_t c = scan_matrix[i][k];
-	      uint8_t pressed = ((r >> k) & 1) && !((o >> k) & 1);
-	      uint8_t released = ((o >> k) & 1) && !((r >> k) & 1);
-	      if(pressed){
-		  _keyPress(c);
-	      }
-	      if(released){
-		  _keyRelease(c);
-	      }
+	      if ((x >> k) & 1)
+		{
+		  uint8_t c = scan_matrix[i][k];
+		  if ((r >> k) & 1)
+		    {
+		      _keyPress (c);
+		    }
+		  else
+		    {
+		      _keyRelease (c);
+		    }
+		}
 	    }
 	}
       old_status[i] = r;
