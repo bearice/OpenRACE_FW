@@ -262,7 +262,6 @@ USBD_StatusTypeDef USBD_ClrClassConfig(USBD_HandleTypeDef  *pdev, uint8_t cfgidx
 */
 USBD_StatusTypeDef USBD_LL_SetupStage(USBD_HandleTypeDef *pdev, uint8_t *psetup)
 {
-	//printf("USBD_LL_SetupStage %d\r\n",pdev->dev_address);
   USBD_ParseSetupRequest(&pdev->request, psetup);
 
   pdev->ep0_state = USBD_EP0_SETUP;
@@ -301,8 +300,6 @@ USBD_StatusTypeDef USBD_LL_SetupStage(USBD_HandleTypeDef *pdev, uint8_t *psetup)
 USBD_StatusTypeDef USBD_LL_DataOutStage(USBD_HandleTypeDef *pdev,
                                         uint8_t epnum, uint8_t *pdata)
 {
-//	printf("USBD_LL_DataOutStage %d ep=%d\r\n",pdev->dev_address,epnum);
-
   USBD_EndpointTypeDef *pep;
 
   if (epnum == 0U)
@@ -364,8 +361,6 @@ USBD_StatusTypeDef USBD_LL_DataOutStage(USBD_HandleTypeDef *pdev,
 USBD_StatusTypeDef USBD_LL_DataInStage(USBD_HandleTypeDef *pdev,
                                        uint8_t epnum, uint8_t *pdata)
 {
-	//printf("USBD_LL_DataInStage %d ep=%d\r\n",pdev->dev_address,epnum);
-
   USBD_EndpointTypeDef *pep;
 
   if (epnum == 0U)
@@ -580,7 +575,7 @@ USBD_StatusTypeDef USBD_LL_DevConnected(USBD_HandleTypeDef *pdev)
 {
   /* Prevent unused argument compilation warning */
   UNUSED(pdev);
-//  printf("USBD_LL_DevConnected %d",pdev->dev_address);
+
   return USBD_OK;
 }
 

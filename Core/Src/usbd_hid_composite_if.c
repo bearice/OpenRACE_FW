@@ -44,35 +44,25 @@ extern "C" {
 /* USB Device Core HID composite handle declaration */
 USBD_HandleTypeDef hUSBD_Device_HID;
 
-static bool HID_keyboard_initialized = false;
-static bool HID_mouse_initialized = false;
+static bool HID_initialized = false;
 
 /**
   * @brief  Initialize USB devices
   * @param  HID_Interface device type: HID_KEYBOARD or HID_MOUSE
   * @retval none
   */
-void HID_Composite_Init(HID_Interface device)
+void HID_Composite_Init()
 {
-  if (IS_HID_INTERFACE(device) &&
-      !HID_keyboard_initialized && !HID_mouse_initialized) {
+  if (!HID_initialized) {
     /* Init Device Library */
     if (USBD_Init(&hUSBD_Device_HID, &FS_Desc, 0) == USBD_OK) {
-//    	USBD_LL_SetSpeed(&hUSBD_Device_HID, USBD_SPEED_LOW);
       /* Add Supported Class */
       if (USBD_RegisterClass(&hUSBD_Device_HID, USBD_COMPOSITE_HID_CLASS) == USBD_OK) {
         /* Start Device Process */
         USBD_Start(&hUSBD_Device_HID);
-        HID_keyboard_initialized = true;
-        HID_mouse_initialized = true;
+        HID_initialized = true;
       }
     }
-  }
-  if (device == HID_KEYBOARD) {
-    HID_keyboard_initialized = HID_mouse_initialized;
-  }
-  if (device == HID_MOUSE) {
-    HID_mouse_initialized = HID_keyboard_initialized;
   }
 }
 
@@ -81,21 +71,14 @@ void HID_Composite_Init(HID_Interface device)
   * @param  HID_Interface device type: HID_KEYBOARD or HID_MOUSE
   * @retval none
   */
-void HID_Composite_DeInit(HID_Interface device)
+void HID_Composite_DeInit()
 {
-  if (IS_HID_INTERFACE(device) &&
-      ((HID_keyboard_initialized && !HID_mouse_initialized) ||
-       (HID_mouse_initialized && !HID_keyboard_initialized))) {
+  if (HID_initialized) {
     /* Stop Device Process */
     USBD_Stop(&hUSBD_Device_HID);
     /* DeInit Device Library */
     USBD_DeInit(&hUSBD_Device_HID);
-  }
-  if (device == HID_KEYBOARD) {
-    HID_keyboard_initialized = false;
-  }
-  if (device == HID_MOUSE) {
-    HID_mouse_initialized = false;
+    HID_initialized = false;
   }
 }
 

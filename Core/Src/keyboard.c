@@ -44,6 +44,7 @@ _sendReport (KeyReport *keys)
 	 keys->modifiers, keys->reserved,
 	 keys->keys[0], keys->keys[1], keys->keys[2], keys->keys[3], keys->keys[4],keys->keys[5]);
   HID_Composite_keyboard_sendReport (buf, 8);
+  HAL_I2C_Master_Transmit(&hi2c1, 4<<1, buf, 4,10);
 }
 
 static KeyReport _keyReport =
@@ -180,3 +181,11 @@ keyboard_scan ()
     }
   //puts("===\r");
 }
+
+void
+keyboard_update_led (uint8_t value)
+{
+  HAL_GPIO_WritePin (GPIOB, GPIO_PIN_2, !!value);
+  HAL_GPIO_WritePin (GPIOA, GPIO_PIN_8, !value);
+}
+

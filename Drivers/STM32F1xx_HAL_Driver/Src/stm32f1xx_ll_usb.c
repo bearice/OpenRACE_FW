@@ -1946,7 +1946,6 @@ HAL_StatusTypeDef USB_FlushRxFifo(USB_TypeDef *USBx)
   */
 HAL_StatusTypeDef USB_ActivateEndpoint(USB_TypeDef *USBx, USB_EPTypeDef *ep)
 {
-//	printf("USB_ActivateEndpoint(%d)\r\n",ep->num);
   HAL_StatusTypeDef ret = HAL_OK;
   uint16_t wEpRegVal;
 

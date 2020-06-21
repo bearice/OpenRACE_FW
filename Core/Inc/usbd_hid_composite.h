@@ -20,28 +20,31 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __USB_HID_COMPOSITE_H
 #define __USB_HID_COMPOSITE_H
-
+#define HID_USE_OUTPUT_EP
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "usbd_ioreq.h"
+//#define HID_USE_OUTPUT_EP 1
 
 #define HID_MOUSE_EPIN_ADDR           0x81U
 #define HID_KEYBOARD_EPIN_ADDR        0x82U
-#define HID_EPOUT_ADDR                0x01U
+#define HID_KEYBOARD_EPOUT_ADDR       0x01U
 
 
 #define HID_MOUSE_EPIN_SIZE           0x04U
 #define HID_KEYBOARD_EPIN_SIZE        0x08U
-#define HID_EPOUT_SIZE                0x01U
-#define DEV_NUM_EP                    0x04U   /* Device Endpoints number including EP0 */
+#define HID_KEYBOARD_EPOUT_SIZE       0x01U
 
 #define HID_MOUSE_INTERFACE           0x00U
 #define HID_KEYBOARD_INTERFACE        0x01U
-
+#ifdef HID_USE_OUTPUT_EP
 #define USB_COMPOSITE_HID_CONFIG_DESC_SIZ       66U
+#else
+#define USB_COMPOSITE_HID_CONFIG_DESC_SIZ       59U
+#endif
 #define USB_HID_DESC_SIZ              9U
 #define HID_MOUSE_REPORT_DESC_SIZE    74U
 #define HID_KEYBOARD_REPORT_DESC_SIZE 65U
@@ -79,7 +82,7 @@ typedef struct {
   uint32_t             AltSetting;
   HID_StateTypeDef     Mousestate;
   HID_StateTypeDef     Keyboardstate;
-  uint8_t			   KeyboardLed;
+  uint8_t	       KeyboardLed;
 }
 USBD_HID_HandleTypeDef;
 

@@ -1214,11 +1214,8 @@ void HAL_PCD_IRQHandler(PCD_HandleTypeDef *hpcd)
   */
 void HAL_PCD_IRQHandler(PCD_HandleTypeDef *hpcd)
 {
-	//printf("HAL_PCD_IRQHandler");
   if (__HAL_PCD_GET_FLAG(hpcd, USB_ISTR_CTR))
   {
-//	    puts("USB_ISTR_CTR");
-
     /* servicing of the endpoint correct transfer interrupt */
     /* clear of the CTR flag into the sub */
     (void)PCD_EP_ISR_Handler(hpcd);
@@ -1231,7 +1228,6 @@ void HAL_PCD_IRQHandler(PCD_HandleTypeDef *hpcd)
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)
     hpcd->ResetCallback(hpcd);
 #else
-    puts("USB_ISTR_RESET\r");
     HAL_PCD_ResetCallback(hpcd);
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
 
@@ -1240,13 +1236,11 @@ void HAL_PCD_IRQHandler(PCD_HandleTypeDef *hpcd)
 
   if (__HAL_PCD_GET_FLAG(hpcd, USB_ISTR_PMAOVR))
   {
-	  puts("USB_ISTR_PMAOVR\r");
     __HAL_PCD_CLEAR_FLAG(hpcd, USB_ISTR_PMAOVR);
   }
 
   if (__HAL_PCD_GET_FLAG(hpcd, USB_ISTR_ERR))
   {
-	  puts("USB_ISTR_ERR\r");
     __HAL_PCD_CLEAR_FLAG(hpcd, USB_ISTR_ERR);
   }
 
@@ -1260,13 +1254,12 @@ void HAL_PCD_IRQHandler(PCD_HandleTypeDef *hpcd)
 #else
     HAL_PCD_ResumeCallback(hpcd);
 #endif /* USE_HAL_PCD_REGISTER_CALLBACKS */
-    puts("USB_ISTR_WKUP\r");
+
     __HAL_PCD_CLEAR_FLAG(hpcd, USB_ISTR_WKUP);
   }
 
   if (__HAL_PCD_GET_FLAG(hpcd, USB_ISTR_SUSP))
   {
-	  puts("USB_ISTR_SUSP\r");
     /* Force low-power mode in the macrocell */
     hpcd->Instance->CNTR |= USB_CNTR_FSUSP;
 
@@ -1290,7 +1283,6 @@ void HAL_PCD_IRQHandler(PCD_HandleTypeDef *hpcd)
 
   if (__HAL_PCD_GET_FLAG(hpcd, USB_ISTR_SOF))
   {
-//	  puts("USB_ISTR_SOF");
     __HAL_PCD_CLEAR_FLAG(hpcd, USB_ISTR_SOF);
 
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)
@@ -1302,7 +1294,6 @@ void HAL_PCD_IRQHandler(PCD_HandleTypeDef *hpcd)
 
   if (__HAL_PCD_GET_FLAG(hpcd, USB_ISTR_ESOF))
   {
-//	  puts("USB_ISTR_ESOF");
     /* clear ESOF flag in ISTR */
     __HAL_PCD_CLEAR_FLAG(hpcd, USB_ISTR_ESOF);
   }
@@ -2005,13 +1996,12 @@ static HAL_StatusTypeDef PCD_EP_OutSetupPacket_int(PCD_HandleTypeDef *hpcd, uint
   */
 static HAL_StatusTypeDef PCD_EP_ISR_Handler(PCD_HandleTypeDef *hpcd)
 {
-//	printf("PCD_EP_ISR_Handler");
   PCD_EPTypeDef *ep;
   uint16_t count;
   uint16_t wIstr;
   uint16_t wEPVal;
   uint8_t epindex;
-//puts("PCD_EP_ISR_Handler");
+
   /* stay in loop while pending interrupts */
   while ((hpcd->Instance->ISTR & USB_ISTR_CTR) != 0U)
   {
