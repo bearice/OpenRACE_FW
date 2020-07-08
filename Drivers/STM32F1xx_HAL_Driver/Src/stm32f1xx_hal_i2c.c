@@ -607,6 +607,7 @@ __weak void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(hi2c);
+
   /* NOTE : This function should not be modified, when the callback is needed,
             the HAL_I2C_MspInit could be implemented in the user file
    */

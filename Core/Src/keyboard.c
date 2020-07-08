@@ -114,25 +114,19 @@ _keyReleaseAll (void)
   _sendReport (&_keyReport);
 }
 
-#define nelem(x) (sizeof(x)/sizeof(x[0]))
-static uint16_t scan_pins[] =
-  {
-  GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_10, GPIO_PIN_11,
-  GPIO_PIN_12, GPIO_PIN_13, GPIO_PIN_14, GPIO_PIN_15,
-  GPIO_PIN_3, GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_8,
-  GPIO_PIN_9, GPIO_PIN_15 };
-#define scan_len nelem(scan_pins)
-
 static uint8_t
-scan_row (int row)
+scan_row (uint8_t row)
 {
-  GPIO_TypeDef *GPIOx = row == scan_len - 1 ? GPIOA : GPIOB;
-  uint16_t pin = scan_pins[row];
-  HAL_GPIO_WritePin (GPIOx, pin, GPIO_PIN_RESET);
+  row = 15-row;
+  GPIOB->ODR = (row << 12 ) | (GPIOB->ODR & 0x0FFF);
   delay_us (10);
+
   uint8_t ret = ~(GPIOA->IDR & 0xff);
-  HAL_GPIO_WritePin (GPIOx, pin, GPIO_PIN_SET);
+
+  //reset pins
+  GPIOB->ODR = GPIOB->ODR & 0x0FFF;
   delay_us (10);
+
   return ret;
 }
 
@@ -152,7 +146,7 @@ static uint8_t old_status[14] =
 void
 keyboard_scan ()
 {
-  for (int i = 0; i < scan_len; i++)
+  for (int i = 0; i < 14; i++)
     {
       uint8_t r = scan_row (i);
       uint8_t o = old_status[i];
@@ -182,10 +176,12 @@ keyboard_scan ()
   //puts("===\r");
 }
 
+// value => {kana, resv, scroll_lock, caps_lock, num_lock}
 void
-keyboard_update_led (uint8_t value)
+keyboard_update_led(uint8_t value)
 {
-  HAL_GPIO_WritePin (GPIOB, GPIO_PIN_2, !!value);
-  HAL_GPIO_WritePin (GPIOA, GPIO_PIN_8, !value);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, !(value&2)); //caps
+//  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, value);
+//  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, value);
 }
 
