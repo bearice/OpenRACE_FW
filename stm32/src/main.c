@@ -1,75 +1,20 @@
-/* USER CODE BEGIN Header */
-/**
- ******************************************************************************
- * @file           : main.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
- * All rights reserved.</center></h2>
- *
- * This software component is licensed by ST under Ultimate Liberty license
- * SLA0044, the "License"; You may not use this file except in compliance with
- * the License. You may obtain a copy of the License at:
- *                             www.st.com/SLA0044
- *
- ******************************************************************************
- */
-/* USER CODE END Header */
-
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "usb_device.h"
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include <stdio.h>
-#include "usbd_hid_composite_if.h"
+#include "main.h"
 #include "led.h"
 #include "keyboard.h"
-/* USER CODE END Includes */
+#include "usbd_hid_composite_if.h"
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
-
 RTC_HandleTypeDef hrtc;
-
 TIM_HandleTypeDef htim2;
-
 UART_HandleTypeDef huart1;
 
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
+static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_RTC_Init(void);
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 
 void delay_us(int x) {
   x *= 12;
@@ -78,8 +23,7 @@ void delay_us(int x) {
     __NOP();
 }
 
-static void
-reset_usb_pins() {
+static void reset_usb_pins() {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   GPIO_InitStruct.Pin = GPIO_PIN_11 | GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
@@ -93,72 +37,51 @@ reset_usb_pins() {
 void HAL_GPIO_EXTI_Callback(uint16_t pin) {
   printf("HAL_GPIO_EXTI_Callback %d\r\n", pin);
 }
-/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
 int main(void) {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-  //  HAL_SetTickFreq (HAL_TICK_FREQ_100HZ);
-
-  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_I2C1_Init();
-  MX_USB_DEVICE_Init();
   MX_TIM2_Init();
   MX_RTC_Init();
-  /* USER CODE BEGIN 2 */
+
+  HAL_DBGMCU_EnableDBGSleepMode();
   reset_usb_pins();
   HID_Composite_Init();
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-  HAL_DBGMCU_EnableDBGSleepMode();
-  printf("Init done. \r\nSysclk: %lu\r\n", HAL_RCC_GetSysClockFreq());
-  /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+  printf("Init done. \r\nSysclk: %lu\r\n", HAL_RCC_GetSysClockFreq());
+
+  /* Main loop */
   int i = 0, last_t = HAL_GetTick();
   while (1) {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
     if ((i % 1000) == 0) {
       int t = HAL_GetTick();
       printf("HeartBeat %d %d\r\n", i / 1000, t - last_t);
-      last_t = t;
       if (HAL_I2C_Master_Transmit(&hi2c1, 4 << 1, (uint8_t *)&t, 4, 10) != HAL_OK) {
         printf("I2C TX ERROR\r\n");
       }
-      if (HAL_I2C_Mem_Read(&hi2c1, 4 << 1, 1, 1, (uint8_t *)&t, 4, 10) != HAL_OK) {
+      if (HAL_I2C_Master_Receive(&hi2c1, 4 << 1, (uint8_t *)&t, 2, 10) != HAL_OK) {
         printf("I2C RX ERROR\r\n");
       }
+      last_t = HAL_GetTick();
     }
     i++;
     led_set_brightness(i);
     keyboard_scan();
-    HAL_Delay(2);
+    //HAL_Delay(1);
     //      RTC_AlarmTypeDef sAlarm =
     //	{
     //	    .AlarmTime =
@@ -167,11 +90,10 @@ int main(void) {
     //	};
     //      HAL_RTC_SetAlarm_IT (&hrtc, &sAlarm, RTC_FORMAT_BIN);
     //      __HAL_RCC_PWR_CLK_ENABLE();
-    // HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     //      SystemClock_Config();
     //  delay_us(70);
   }
-  /* USER CODE END 3 */
 }
 
 /**
@@ -183,8 +105,7 @@ void SystemClock_Config(void) {
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Initializes the CPU, AHB and APB busses clocks 
-  */
+  /* Initializes the CPU, AHB and APB busses clocks */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
@@ -196,8 +117,8 @@ void SystemClock_Config(void) {
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
-  */
+
+  /* Initializes the CPU, AHB and APB busses clocks */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV4;
@@ -221,14 +142,6 @@ void SystemClock_Config(void) {
   * @retval None
   */
 static void MX_I2C1_Init(void) {
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
   hi2c1.Init.ClockSpeed = 100000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
@@ -241,9 +154,6 @@ static void MX_I2C1_Init(void) {
   if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
     Error_Handler();
   }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
 }
 
 /**
@@ -252,25 +162,13 @@ static void MX_I2C1_Init(void) {
   * @retval None
   */
 static void MX_RTC_Init(void) {
-
-  /* USER CODE BEGIN RTC_Init 0 */
-
-  /* USER CODE END RTC_Init 0 */
-
-  /* USER CODE BEGIN RTC_Init 1 */
-
-  /* USER CODE END RTC_Init 1 */
-  /** Initialize RTC Only 
-  */
+  /** Initialize RTC Only */
   hrtc.Instance = RTC;
   hrtc.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
   hrtc.Init.OutPut = RTC_OUTPUTSOURCE_ALARM;
   if (HAL_RTC_Init(&hrtc) != HAL_OK) {
     Error_Handler();
   }
-  /* USER CODE BEGIN RTC_Init 2 */
-
-  /* USER CODE END RTC_Init 2 */
 }
 
 /**
@@ -279,17 +177,9 @@ static void MX_RTC_Init(void) {
   * @retval None
   */
 static void MX_TIM2_Init(void) {
-
-  /* USER CODE BEGIN TIM2_Init 0 */
-
-  /* USER CODE END TIM2_Init 0 */
-
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
-  /* USER CODE BEGIN TIM2_Init 1 */
-
-  /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = PWM_SCALE;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -314,9 +204,7 @@ static void MX_TIM2_Init(void) {
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_4) != HAL_OK) {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM2_Init 2 */
 
-  /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
 }
 
@@ -326,14 +214,6 @@ static void MX_TIM2_Init(void) {
   * @retval None
   */
 static void MX_USART1_UART_Init(void) {
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
   huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
@@ -345,9 +225,6 @@ static void MX_USART1_UART_Init(void) {
   if (HAL_UART_Init(&huart1) != HAL_OK) {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
 }
 
 /**
@@ -413,21 +290,13 @@ static void MX_GPIO_Init(void) {
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
 void Error_Handler(void) {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  //  assert(false);
   while (1)
-    ;
-  /* USER CODE END Error_Handler_Debug */
+    __NOP();
 }
 
 #ifdef USE_FULL_ASSERT
@@ -439,11 +308,6 @@ void Error_Handler(void) {
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line) {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
+  printf("Assertion failed: file %s on line %d\r\n", file, line);
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

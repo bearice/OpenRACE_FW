@@ -85,12 +85,10 @@ typedef struct {
 extern USBD_ClassTypeDef USBD_COMPOSITE_HID;
 #define USBD_COMPOSITE_HID_CLASS &USBD_COMPOSITE_HID
 
-uint8_t USBD_HID_MOUSE_SendReport(USBD_HandleTypeDef *pdev, uint8_t *report,
-                                  uint16_t len);
-uint8_t USBD_HID_KEYBOARD_SendReport(USBD_HandleTypeDef *pdev, uint8_t *report,
-                                     uint16_t len);
+uint8_t USBD_HID_MOUSE_SendReport(USBD_HandleTypeDef *pdev, uint8_t *report, uint16_t len);
+uint8_t USBD_HID_KEYBOARD_SendReport(USBD_HandleTypeDef *pdev, uint8_t *report, uint16_t len);
 
-// uint32_t USBD_HID_GetPollingInterval(USBD_HandleTypeDef *pdev);
+uint32_t USBD_HID_GetPollingInterval(USBD_HandleTypeDef *pdev);
 
 #ifdef __cplusplus
 }

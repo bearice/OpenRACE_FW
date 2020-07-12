@@ -7,10 +7,6 @@
 		{
 			"name": "openrace_bluetooth",
 			"path": "openrace_bluetooth"
-		},
-		{
-			"name": "usb-uart",
-			"path": "..\\usb-uart"
 		}
 	],
 	"settings": {

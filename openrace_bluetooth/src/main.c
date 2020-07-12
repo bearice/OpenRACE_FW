@@ -23,14 +23,14 @@
 #define I2C_SLAVE_RX_BUF_LEN (2 * DATA_LENGTH) /*!< I2C slave rx buffer size */
 #define ESP_SLAVE_ADDR 4                       /*!< ESP32 slave address, you can set any 7bit value */
 
-static xQueueHandle i2c_event_queue = NULL;
+// static xQueueHandle i2c_event_queue = NULL;
 
-struct QueueMessage {
-  int interruptNo;
-} xMessage;
+// struct QueueMessage {
+//   int interruptNo;
+// } xMessage;
 
-static intr_handle_t i2c_slave_intr_handle = NULL;
-static void IRAM_ATTR i2c_onData(void *arg);
+// static intr_handle_t i2c_slave_intr_handle = NULL;
+// static void IRAM_ATTR i2c_onData(void *arg);
 // static void IRAM_ATTR i2c_slave_isr_handler_default(void *arg);
 /**
  * @brief i2c slave initialization
@@ -69,25 +69,25 @@ static void disp_buf(uint8_t *buf, int len) {
   printf("\n");
 }
 
-static void IRAM_ATTR i2c_onData(void *arg) {
-  ets_printf("int_status %d\n", I2C0.int_status.val);
-  if (I2C0.int_status.end_detect) {
-    struct QueueMessage *message;
-    message = (struct QueueMessage *)malloc(sizeof(struct QueueMessage));
-    message->interruptNo = esp_intr_get_intno(i2c_slave_intr_handle);
+// static void IRAM_ATTR i2c_onData(void *arg) {
+//   ets_printf("int_status %d\n", I2C0.int_status.val);
+//   if (I2C0.int_status.end_detect) {
+//     struct QueueMessage *message;
+//     message = (struct QueueMessage *)malloc(sizeof(struct QueueMessage));
+//     message->interruptNo = esp_intr_get_intno(i2c_slave_intr_handle);
 
-    if (i2c_isr_free(i2c_slave_intr_handle) == ESP_OK) {
-      i2c_slave_intr_handle = NULL;
-      ets_printf("Free-ed interrupt handler\n");
-    } else {
-      ets_printf("Failed to free interrupt handler\n");
-    }
-    BaseType_t ret = xQueueSendFromISR(i2c_event_queue, &message, NULL);
-    if (ret != pdTRUE) {
-      ets_printf("Could not send event to queue (%d)\n", ret);
-    }
-  }
-}
+//     if (i2c_isr_free(i2c_slave_intr_handle) == ESP_OK) {
+//       i2c_slave_intr_handle = NULL;
+//       ets_printf("Free-ed interrupt handler\n");
+//     } else {
+//       ets_printf("Failed to free interrupt handler\n");
+//     }
+//     BaseType_t ret = xQueueSendFromISR(i2c_event_queue, &message, NULL);
+//     if (ret != pdTRUE) {
+//       ets_printf("Could not send event to queue (%d)\n", ret);
+//     }
+//   }
+// }
 
 static void i2c_slave_task(void *arg) {
   ESP_LOGI(TAG, "Starting i2c_slave_task loop");
@@ -102,7 +102,8 @@ static void i2c_slave_task(void *arg) {
     printf("Got %d bytes\n", ret);
     if (ret) {
       disp_buf(buf, ret);
-      // i2c_slave_write_buffer(I2C_SLAVE_NUM, &i, 4, 1000 / portTICK_RATE_MS);
+      i2c_reset_tx_fifo(I2C_SLAVE_NUM);
+      i2c_slave_write_buffer(I2C_SLAVE_NUM, (uint8_t *)&i, 4, 1000 / portTICK_RATE_MS);
       i++;
     }
     //   esp_err_t isr_register_ret = i2c_isr_register(I2C_SLAVE_NUM, i2c_onData, 0, 0, &i2c_slave_intr_handle);
@@ -143,11 +144,11 @@ void app_main() {
   // printf("Restarting now.\n");
   // fflush(stdout);
   // esp_restart();
-  i2c_event_queue = xQueueCreate(5, sizeof(uint32_t *));
+  // i2c_event_queue = xQueueCreate(5, sizeof(uint32_t *));
 
-  if (i2c_event_queue == 0) {
-    ESP_LOGW(TAG, "Failed to create event queue");
-  }
+  // if (i2c_event_queue == 0) {
+  //   ESP_LOGW(TAG, "Failed to create event queue");
+  // }
   i2c_slave_init();
   xTaskCreate(i2c_slave_task, "i2c_slave_task", 1024 * 2, (void *)0, 10, NULL);
 }

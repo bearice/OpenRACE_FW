@@ -1,14 +1,8 @@
-/*
- * keyboard.c
- *
- *  Created on: Jun 13, 2020
- *      Author: Bearice
- */
 #include <stdio.h>
 
+#include "main.h"
 #include "keyboard.h"
 #include "led.h"
-#include "main.h"
 #include "usbd_hid_composite_if.h"
 
 #define KEY_FN 0xFFU

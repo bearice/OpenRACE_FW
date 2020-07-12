@@ -37,14 +37,10 @@
 #ifndef __USBD_HID_COMPOSITE_IF_H
 #define __USBD_HID_COMPOSITE_IF_H
 
-/* Includes ------------------------------------------------------------------*/
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Exported types ------------------------------------------------------------*/
-
-/* Exported functions ------------------------------------------------------- */
 void HID_Composite_Init();
 void HID_Composite_DeInit();
 

@@ -1,10 +1,3 @@
-/*
- * led.h
- *
- *  Created on: Jul 9, 2020
- *      Author: Bearice
- */
-
 #ifndef INC_LED_H_
 #define INC_LED_H_
 

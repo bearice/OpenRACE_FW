@@ -3,8 +3,7 @@
  ******************************************************************************
  * @file           : Target/usbd_conf.c
  * @version        : v2.0_Cube
- * @brief          : This file implements the board support package for the USB
- *device library
+ * @brief          : This file implements the board support package for the USB device library
  ******************************************************************************
  * @attention
  *
@@ -23,40 +22,16 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stm32f1xx.h>
 #include <stm32f1xx_hal.h>
-#include <usbd_core.h>
-#include <usbd_def.h>
-#include <usbd_hid.h>
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE END PV */
+#include "usbd_core.h"
+#include "usbd_def.h"
+#include "usbd_hid_composite.h"
 
 PCD_HandleTypeDef hpcd_USB_FS;
 void Error_Handler(void);
 
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
-
-/* USER CODE END PFP */
-
-/* Private functions ---------------------------------------------------------*/
 static USBD_StatusTypeDef USBD_Get_USB_Status(HAL_StatusTypeDef hal_status);
-/* USER CODE BEGIN 1 */
 
-/* USER CODE END 1 */
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)
 static void PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state);
 else void HAL_PCDEx_SetConnectionState(PCD_HandleTypeDef *hpcd, uint8_t state);
