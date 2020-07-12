@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"name": "stm32",
+			"path": "stm32"
+		},
+		{
+			"name": "openrace_bluetooth",
+			"path": "openrace_bluetooth"
+		},
+		{
+			"name": "usb-uart",
+			"path": "..\\usb-uart"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.ipp": "c",
+			"system_error": "c"
+		}
+	}
+}
