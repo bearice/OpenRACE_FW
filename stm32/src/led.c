@@ -10,7 +10,7 @@ void led_set_brightness(uint16_t value) {
 }
 
 void led_set_caps_lock(uint16_t v) {
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, !v);
+  HAL_GPIO_WritePin(LED_CAPS_GPIO_Port, LED_CAPS_Pin, !!v);
 }
 
 void led_set_num_lock(uint16_t v) {

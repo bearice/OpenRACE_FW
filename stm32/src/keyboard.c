@@ -29,15 +29,15 @@ typedef struct {
 } KeyReport;
 
 static void _sendReport(KeyReport *keys) {
-  uint8_t buf[8] = {keys->modifiers, keys->reserved, keys->keys[0],
+  uint8_t buf[9] = {2, keys->modifiers, keys->reserved, keys->keys[0],
                     keys->keys[1], keys->keys[2], keys->keys[3],
                     keys->keys[4], keys->keys[5]};
 
   printf("Report %02x%02x%02x%02x%02x%02x%02x%02x\r\n", keys->modifiers,
          keys->reserved, keys->keys[0], keys->keys[1], keys->keys[2],
          keys->keys[3], keys->keys[4], keys->keys[5]);
-  HID_Composite_keyboard_sendReport(buf, 8);
-  HAL_I2C_Master_Transmit(&hi2c1, 4 << 1, buf, 4, 10);
+  HID_Composite_keyboard_sendReport(buf + 1, 8);
+  HAL_I2C_Master_Transmit(&hi2c1, 4 << 1, buf, 9, 10);
 }
 
 static uint8_t fn_pressed = 0;

@@ -63,25 +63,24 @@ int main(void) {
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
 
   printf("Init done. \r\nSysclk: %lu\r\n", HAL_RCC_GetSysClockFreq());
+  led_set_caps_lock(0);
 
   /* Main loop */
-  int i = 0, last_t = HAL_GetTick();
+  uint32_t i = 0, last_t = HAL_GetTick();
   while (1) {
     if ((i % 1000) == 0) {
-      int t = HAL_GetTick();
-      printf("HeartBeat %d %d\r\n", i / 1000, t - last_t);
-      if (HAL_I2C_Master_Transmit(&hi2c1, 4 << 1, (uint8_t *)&t, 4, 10) != HAL_OK) {
+      uint32_t t = HAL_GetTick();
+      printf("HeartBeat %lu %lu\r\n", i / 1000, t - last_t);
+      uint8_t buf[5] = {1, t >> 24, t >> 16, t >> 8, t & 0xff};
+      if (HAL_I2C_Master_Transmit(&hi2c1, 4 << 1, buf, 5, 10) != HAL_OK) {
         printf("I2C TX ERROR\r\n");
-      }
-      if (HAL_I2C_Master_Receive(&hi2c1, 4 << 1, (uint8_t *)&t, 2, 10) != HAL_OK) {
-        printf("I2C RX ERROR\r\n");
       }
       last_t = HAL_GetTick();
     }
     i++;
-    led_set_brightness(i);
+    led_set_brightness((i >> 2) << 2);
     keyboard_scan();
-    //HAL_Delay(1);
+    HAL_Delay(1);
     //      RTC_AlarmTypeDef sAlarm =
     //	{
     //	    .AlarmTime =
@@ -90,7 +89,7 @@ int main(void) {
     //	};
     //      HAL_RTC_SetAlarm_IT (&hrtc, &sAlarm, RTC_FORMAT_BIN);
     //      __HAL_RCC_PWR_CLK_ENABLE();
-    HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+    // HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     //      SystemClock_Config();
     //  delay_us(70);
   }
@@ -255,7 +254,7 @@ static void MX_GPIO_Init(void) {
 
   /*Configure GPIO pin : LED_CAPS_Pin */
   GPIO_InitStruct.Pin = LED_CAPS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_CAPS_GPIO_Port, &GPIO_InitStruct);

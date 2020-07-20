@@ -18,7 +18,7 @@ void Error_Handler(void);
 void delay_us(int x);
 
 // LED PWM defines
-#define PWM_FREQ 100
+#define PWM_FREQ 10000
 #define PWM_RES 256
 #define PWM_SCALE ((12000000 / PWM_RES / PWM_FREQ) - 1)
 
