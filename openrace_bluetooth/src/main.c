@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -10,14 +11,15 @@
 #include "soc/i2c_struct.h"
 #include "soc/i2c_reg.h"
 #include "sdkconfig.h"
+#include "main.h"
 
-#define TAG "I2C"
+#define TAG "MAIN"
 #define _I2C_NUMBER(num) I2C_NUM_##num
 #define I2C_NUMBER(num) _I2C_NUMBER(num)
 
 #define DATA_LENGTH 128                        /*!< Data buffer length of data buffer */
-#define I2C_SLAVE_SCL_IO 21                    /*!< gpio number for i2c slave clock */
-#define I2C_SLAVE_SDA_IO 22                    /*!< gpio number for i2c slave data */
+#define I2C_SLAVE_SCL_IO 25                    /*!< gpio number for i2c slave clock */
+#define I2C_SLAVE_SDA_IO 26                    /*!< gpio number for i2c slave data */
 #define I2C_SLAVE_NUM I2C_NUMBER(0)            /*!< I2C port number for slave dev */
 #define I2C_SLAVE_TX_BUF_LEN (2 * DATA_LENGTH) /*!< I2C slave tx buffer size */
 #define I2C_SLAVE_RX_BUF_LEN (2 * DATA_LENGTH) /*!< I2C slave rx buffer size */
@@ -92,19 +94,29 @@ static void disp_buf(uint8_t *buf, int len) {
 static void i2c_slave_task(void *arg) {
   ESP_LOGI(TAG, "Starting i2c_slave_task loop");
   uint8_t buf[I2C_SLAVE_RX_BUF_LEN] = {0};
-  int i = 0;
   while (1) {
     // struct QueueMessage *message = NULL;
     // BaseType_t ret = xQueueReceive(i2c_event_queue, &message, 1000 / portTICK_RATE_MS);
     // if (ret) {
     // free(message);
-    int ret = i2c_slave_read_buffer(I2C_SLAVE_NUM, buf, I2C_SLAVE_RX_BUF_LEN, 1000 / portTICK_RATE_MS);
-    printf("Got %d bytes\n", ret);
+    uint8_t type;
+    int ret = i2c_slave_read_buffer(I2C_SLAVE_NUM, &type, 1, 1000 / portTICK_RATE_MS);
     if (ret) {
-      disp_buf(buf, ret);
-      i2c_reset_tx_fifo(I2C_SLAVE_NUM);
-      i2c_slave_write_buffer(I2C_SLAVE_NUM, (uint8_t *)&i, 4, 1000 / portTICK_RATE_MS);
-      i++;
+      printf("Got message type %d\n", ret);
+      switch (type) {
+      case 1:
+        ret = i2c_slave_read_buffer(I2C_SLAVE_NUM, buf, 4, 1000 / portTICK_RATE_MS);
+        printf("Heartbeat message: \n");
+        disp_buf(buf, ret);
+        break;
+      case 2:
+        ret = i2c_slave_read_buffer(I2C_SLAVE_NUM, buf, 8, 1000 / portTICK_RATE_MS);
+        printf("Report message: \n");
+        disp_buf(buf, ret);
+        QueueMessage_t *msg = malloc(sizeof(QueueMessage_t));
+        memcpy(msg->buf, buf, 8);
+        xQueueSend(event_queue, &msg, 1000 / portTICK_RATE_MS);
+      }
     }
     //   esp_err_t isr_register_ret = i2c_isr_register(I2C_SLAVE_NUM, i2c_onData, 0, 0, &i2c_slave_intr_handle);
     //   if (isr_register_ret == ESP_OK) {
@@ -119,6 +131,9 @@ static void i2c_slave_task(void *arg) {
     // vTaskDelay(portTICK_RATE_MS / 1000);
   }
 }
+
+xQueueHandle event_queue;
+void ble_hid_init();
 void app_main() {
   printf("Hello world!\n");
 
@@ -144,11 +159,12 @@ void app_main() {
   // printf("Restarting now.\n");
   // fflush(stdout);
   // esp_restart();
-  // i2c_event_queue = xQueueCreate(5, sizeof(uint32_t *));
+  event_queue = xQueueCreate(5, sizeof(QueueMessage_t *));
 
-  // if (i2c_event_queue == 0) {
-  //   ESP_LOGW(TAG, "Failed to create event queue");
-  // }
+  if (event_queue == 0) {
+    ESP_LOGW(TAG, "Failed to create event queue");
+  }
   i2c_slave_init();
   xTaskCreate(i2c_slave_task, "i2c_slave_task", 1024 * 2, (void *)0, 10, NULL);
+  ble_hid_init();
 }
