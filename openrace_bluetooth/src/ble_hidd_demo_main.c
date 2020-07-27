@@ -51,32 +51,14 @@
 
 static uint16_t hid_conn_id = 0;
 static bool sec_conn = false;
-static bool send_volum_up = false;
 #define CHAR_DECLARATION_SIZE (sizeof(uint8_t))
 
 static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param);
 
 #define HIDD_DEVICE_NAME "HID"
-static uint8_t hidd_service_uuid128[] = {
-    /* LSB <--------------------------------------------------------------------------------> MSB */
-    //first uuid, 16bit, [12],[13] is the value
-    0xfb,
-    0x34,
-    0x9b,
-    0x5f,
-    0x80,
-    0x00,
-    0x00,
-    0x80,
-    0x00,
-    0x10,
-    0x00,
-    0x00,
-    0x12,
-    0x18,
-    0x00,
-    0x00,
-};
+/* LSB <--------------------------------------------------------------------------------> MSB */
+//first uuid, 16bit, [12],[13] is the value
+static uint8_t hidd_service_uuid128[] = {0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x12, 0x18, 0x00, 0x00};
 
 static esp_ble_adv_data_t hidd_adv_data = {
     .set_scan_rsp = false,
@@ -177,12 +159,10 @@ void hid_demo_task(void *pvParameters) {
     QueueMessage_t *message = NULL;
     BaseType_t ret = xQueueReceive(event_queue, &message, 1000 / portTICK_RATE_MS);
     if (ret) {
-      ESP_LOGI(HID_DEMO_TAG, "Sending report vaule = %d, %d, %d, %d, %d, %d,%d, %d",
-               message->buf[0], message->buf[1], message->buf[2], message->buf[3], message->buf[4], message->buf[5], message->buf[6], message->buf[7]);
       if (sec_conn) {
+        ESP_LOGI(HID_DEMO_TAG, "Sending report vaule = %d, %d, %d, %d, %d, %d,%d, %d",
+                 message->buf[0], message->buf[1], message->buf[2], message->buf[3], message->buf[4], message->buf[5], message->buf[6], message->buf[7]);
         hid_dev_send_report(hidd_le_env.gatt_if, hid_conn_id, HID_RPT_ID_KEY_IN, HID_REPORT_TYPE_INPUT, sizeof(message->buf), message->buf);
-      } else {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
       }
       free(message);
     }
