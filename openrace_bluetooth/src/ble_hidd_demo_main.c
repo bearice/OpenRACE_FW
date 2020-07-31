@@ -124,6 +124,7 @@ static void hidd_event_callback(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *
 }
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
+  ESP_LOGI(HID_DEMO_TAG, "gap_event_handler(%d)", event);
   switch (event) {
   case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
     esp_ble_gap_start_advertising(&hidd_adv_params);
@@ -152,6 +153,9 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
   }
 }
 
+extern uint8_t battary_lev;
+extern esp_gatts_incl_svc_desc_t incl_svc;
+
 //extern hidd_le_env_t hidd_le_env;
 void hid_demo_task(void *pvParameters) {
   vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -163,6 +167,8 @@ void hid_demo_task(void *pvParameters) {
         ESP_LOGI(HID_DEMO_TAG, "Sending report vaule = %d, %d, %d, %d, %d, %d,%d, %d",
                  message->buf[0], message->buf[1], message->buf[2], message->buf[3], message->buf[4], message->buf[5], message->buf[6], message->buf[7]);
         hid_dev_send_report(hidd_le_env.gatt_if, hid_conn_id, HID_RPT_ID_KEY_IN, HID_REPORT_TYPE_INPUT, sizeof(message->buf), message->buf);
+        esp_ble_gatts_set_attr_value(incl_svc.start_hdl + 2, sizeof(battary_lev), &battary_lev);
+        esp_ble_gatts_send_indicate(hidd_le_env.gatt_if, hid_conn_id, incl_svc.start_hdl + 2, sizeof(battary_lev), &battary_lev, false);
       }
       free(message);
     }
@@ -171,6 +177,7 @@ void hid_demo_task(void *pvParameters) {
 
 void ble_hid_init() {
   esp_log_level_set(HID_DEMO_TAG, ESP_LOG_VERBOSE);
+  esp_log_level_set(HID_LE_PRF_TAG, ESP_LOG_VERBOSE);
   esp_err_t ret;
 
   // Initialize NVS.
